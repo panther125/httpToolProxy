@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTTP 调用工具</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0f1117;
+  --panel: #1a1d27;
+  --panel2: #232734;
+  --border: #2d3242;
+  --text: #e6e8ee;
+  --muted: #8b90a3;
+  --accent: #4f8cff;
+  --accent2: #6ea8ff;
+  --green: #3ecf8e;
+  --red: #ff5c5c;
+  --orange: #ffb020;
+  --purple: #b083ff;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+header h1 {
+  font-size: 15px; font-weight: 600; white-space: nowrap;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+header .sub { color: var(--muted); font-size: 12px; }
+.tabs {
+  display: flex; gap: 2px; background: var(--panel2); padding: 3px; border-radius: 8px;
+}
+.tab {
+  padding: 4px 10px; font-size: 12px; color: var(--muted); cursor: pointer;
+  border-radius: 6px; border: none; background: transparent;
+}
+.tab.active { background: var(--accent); color: #fff; }
+.spacer { flex: 1; }
+#historyBtn, #clearHistory {
+  background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
+  padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
+}
+#historyBtn:hover, #clearHistory:hover { color: var(--text); border-color: var(--accent); }
+
+main { flex: 1; display: flex; overflow: hidden; }
+
+.request-panel {
+  width: 46%; min-width: 420px; display: flex; flex-direction: column;
+  border-right: 1px solid var(--border); overflow-y: auto;
+}
+.response-panel { flex: 1; display: flex; flex-direction: column; }
+
+.section-title {
+  font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px;
+  padding: 8px 12px; background: var(--panel); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+
+.url-bar { display: flex; gap: 8px; padding: 10px 12px; align-items: center; }
+select#method {
+  background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 6px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+select#method.get { color: var(--green); }
+select#method.post { color: var(--orange); }
+select#method.put { color: var(--accent); }
+select#method.patch { color: var(--purple); }
+select#method.delete { color: var(--red); }
+#url {
+  flex: 1; background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 12px; font-size: 13px; font-family: "Consolas", monospace;
+}
+#url:focus { outline: none; border-color: var(--accent); }
+#sendBtn {
+  background: var(--accent); color: #fff; border: none; border-radius: 6px;
+  padding: 8px 22px; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: background .15s;
+}
+#sendBtn:hover { background: var(--accent2); }
+#sendBtn:disabled { background: var(--panel2); color: var(--muted); cursor: not-allowed; }
+
+.toolbar { display: flex; gap: 6px; padding: 0 12px 10px; }
+.toolbar button {
+  background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
+  padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
+}
+.toolbar button:hover { color: var(--text); border-color: var(--accent); }
+
+.option-row { display: flex; gap: 14px; padding: 0 12px 10px; align-items: center; font-size: 12px; }
+.option-row label { color: var(--muted); display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.option-row input[type="text"] {
+  background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 4px; padding: 3px 8px; font-size: 12px; width: 90px;
+}
+.option-row input[type="text"]:focus { outline: none; border-color: var(--accent); }
+
+.editor-area { flex: 1; overflow: auto; padding: 0 12px 12px; display: flex; flex-direction: column; }
+
+.kv-editor { flex: 1; display: flex; flex-direction: column; }
+.kv-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: center; }
+.kv-row input {
+  flex: 1; background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 4px; padding: 6px 10px; font-size: 12px;
+}
+.kv-row input:focus { outline: none; border-color: var(--accent); }
+.kv-del { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 15px; }
+.kv-del:hover { color: var(--red); }
+.add-kv {
+  align-self: flex-start; background: transparent; color: var(--accent); border: none;
+  font-size: 12px; cursor: pointer; padding: 4px 0;
+}
+.add-kv:hover { color: var(--accent2); }
+
+.body-area { flex: 1; display: flex; flex-direction: column; }
+#body {
+  flex: 1; width: 100%; resize: none;
+  background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px; font-size: 12px; font-family: "Consolas", monospace;
+  line-height: 1.5; min-height: 120px;
+}
+#body:focus { outline: none; border-color: var(--accent); }
+.body-meta { display: flex; gap: 10px; align-items: center; padding: 6px 0; font-size: 12px; }
+.body-meta label { color: var(--muted); }
+.body-meta select {
+  background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 4px; padding: 3px 8px; font-size: 12px;
+}
+.body-type-label {
+  margin-left: auto; color: var(--muted); font-size: 11px;
+  background: var(--panel2); padding: 2px 8px; border-radius: 4px;
+}
+.body-meta button.mini-btn {
+  margin-left: 8px; background: var(--panel2); color: var(--muted);
+  border: 1px solid var(--border); border-radius: 4px; padding: 3px 10px;
+  font-size: 12px; cursor: pointer;
+}
+.body-meta button.mini-btn:hover { color: var(--text); border-color: var(--accent); }
+
+#bodyInput {
+  flex: 1; width: 100%; resize: none; min-height: 160px;
+  background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px; font-size: 12px; white-space: pre;
+  font-family: "Consolas", monospace; line-height: 1.5;
+}
+#bodyInput:focus { outline: none; border-color: var(--accent); }
+
+.res-meta { display: flex; align-items: center; gap: 10px; }
+#statusBadge {
+  font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 4px;
+}
+.status-2xx { background: rgba(62,207,142,.15); color: var(--green); }
+.status-3xx { background: rgba(110,168,255,.15); color: var(--accent2); }
+.status-4xx { background: rgba(255,92,92,.15); color: var(--red); }
+.status-5xx { background: rgba(255,176,32,.15); color: var(--orange); }
+#resTime, #resSize { color: var(--muted); font-size: 11px; }
+
+.response-body { flex: 1; overflow: auto; padding: 0; }
+#response {
+  width: 100%; height: 100%; resize: none;
+  background: #12141d; color: #d8dde8; border: none; padding: 12px;
+  font-size: 12px; font-family: "Consolas", "Courier New", monospace; line-height: 1.5;
+  white-space: pre; overflow: auto;
+}
+#response:focus { outline: none; }
+
+#rawResponseView { display: none; }
+
+.code-block {
+  background: #12141d; padding: 10px 12px; border-radius: 4px;
+  font-family: "Consolas", monospace; font-size: 12px; white-space: pre-wrap;
+  word-break: break-all; overflow-x: auto;
+}
+.code-block.err { color: var(--red); }
+.placeholder {
+  display: flex; align-items: center; justify-content: center; height: 100%;
+  color: var(--muted); font-size: 13px;
+}
+
+/* History */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none;
+  align-items: center; justify-content: center; z-index: 100;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+  width: 640px; max-width: 92vw; max-height: 76vh; display: flex; flex-direction: column;
+}
+.modal-head { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.modal-head h3 { font-size: 14px; flex: 1; }
+.modal-head button { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; }
+.modal-head button:hover { color: var(--text); }
+.modal-body { overflow: auto; padding: 8px 0; }
+.hist-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 16px; cursor: pointer;
+  border-bottom: 1px solid var(--border); font-size: 12px;
+}
+.hist-item:hover { background: var(--panel2); }
+.hist-method { font-weight: 600; min-width: 52px; }
+.hist-url { flex: 1; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: "Consolas", monospace; }
+.hist-time { color: var(--muted); font-size: 11px; }
+.modal-foot { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+.modal-foot button { background: var(--accent); color: #fff; border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; cursor: pointer; margin-left: 8px; }
+.modal-foot button.secondary { background: var(--panel2); color: var(--muted); border: 1px solid var(--border); }
+.modal-foot button:hover { filter: brightness(1.08); }
+#curlInput {
+  width: 100%; height: 220px; resize: none; box-sizing: border-box;
+  background: #12141d; color: #d8dde8; border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px; font-size: 12px; line-height: 1.5;
+  font-family: "Consolas", monospace;
+}
+#curlInput:focus { outline: none; border-color: var(--accent); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #333a4d; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #414a63; }
+::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>HTTP 调用工具</h1>
+  <span class="sub">纯网页 · 浏览器内自由调用</span>
+  <div class="spacer"></div>
+  <button id="historyBtn">历史记录</button>
+  <button id="clearHistory">清空</button>
+</header>
+
+<main>
+  <!-- 请求面板 -->
+  <section class="request-panel">
+    <div class="url-bar">
+      <select id="method">
+        <option value="GET" class="get">GET</option>
+        <option value="POST" class="post">POST</option>
+        <option value="PUT" class="put">PUT</option>
+        <option value="PATCH" class="patch">PATCH</option>
+        <option value="DELETE" class="delete">DELETE</option>
+        <option value="HEAD" class="get">HEAD</option>
+        <option value="OPTIONS" class="get">OPTIONS</option>
+      </select>
+      <input id="url" type="text" placeholder="输入 URL，例如 https://api.example.com/data">
+      <button id="sendBtn">发送</button>
+    </div>
+
+    <div class="toolbar">
+      <button id="addHeader">+ 添加 Header</button>
+      <button id="insertToken">插入 Bearer Token</button>
+      <button id="importCurl">导入 curl</button>
+    </div>
+
+    <div class="option-row">
+      <label><input type="checkbox" id="corsProxy" checked> 跨域代理</label>
+      <label>方案
+        <select id="proxyPreset">
+          <option value="local">本地代理 (推荐·需运行 server.js)</option>
+          <option value="corslol">cors.lol</option>
+          <option value="corsproxyio">corsproxy.io</option>
+          <option value="allorigins">allorigins</option>
+          <option value="custom">自定义</option>
+        </select>
+      </label>
+      <label id="proxyCustomWrap" style="display:none">地址
+        <input type="text" id="proxyUrl" value="https://corsproxy.io/?">
+      </label>
+    </div>
+
+    <div class="section-title">请求头 / 查询参数</div>
+    <div class="editor-area" id="kvArea">
+      <div class="kv-editor" id="kvEditor"></div>
+    </div>
+
+    <div class="section-title">请求体</div>
+    <div class="editor-area">
+      <div class="body-area">
+        <div class="body-meta">
+          <label>类型
+            <select id="bodyType">
+              <option value="json">JSON</option>
+              <option value="raw">Text 文本</option>
+              <option value="form">表单 (urlencoded)</option>
+              <option value="none">无</option>
+            </select>
+          </label>
+          <span class="body-type-label" id="bodyTypeLabel">Content-Type: application/json</span>
+          <button id="formatBody" class="mini-btn">格式化 JSON</button>
+        </div>
+        <textarea id="bodyInput" placeholder='在此输入请求体，例如 {"key": "value"}'></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- 响应面板 -->
+  <section class="response-panel">
+    <div class="section-title">
+      响应
+      <div class="res-meta">
+        <span id="statusBadge"></span>
+        <span id="resTime"></span>
+        <span id="resSize"></span>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button id="viewJson">JSON 视图</button>
+      <button id="viewRaw">Raw 视图</button>
+      <button id="formatRes">格式化 JSON</button>
+      <button id="downloadRes">下载响应</button>
+      <button id="copyRes">复制</button>
+    </div>
+    <div class="response-body">
+      <div id="jsonResponseView" class="placeholder">输入 URL 并点击「发送」开始请求</div>
+      <div id="rawResponseView"></div>
+    </div>
+  </section>
+</main>
+
+<!-- 历史记录弹窗 -->
+<div class="modal-overlay" id="historyModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>历史记录</h3>
+      <button id="closeModal">&times;</button>
+    </div>
+    <div class="modal-body" id="histList"></div>
+  </div>
+</div>
+
+<!-- 导入 cURL 弹窗 -->
+<div class="modal-overlay" id="curlModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>导入 cURL</h3>
+      <button id="closeCurlModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="curlInput" placeholder="粘贴 curl 命令，例如：
+curl -X POST https://api.example.com/data \
+  -H 'Content-Type: application/json' \
+  -d '{"key": "value"}'"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button id="cancelCurlModal" class="secondary">取消</button>
+      <button id="doImportCurl">导入</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- 状态 ----------
+  const state = {
+    headers: [["Content-Type", "application/json"]],
+    queries: [],
+    history: loadHistory(),
+    method: "GET",
+    url: "",
+  };
+
+  const $ = (id) => document.getElementById(id);
+
+  // ---------- KV 编辑器 ----------
+  const kvEditor = $("kvEditor");
+
+  function addKvRow(container, key, value, delCb) {
+    const row = document.createElement("div");
+    row.className = "kv-row";
+    const kInput = document.createElement("input");
+    kInput.placeholder = "键";
+    kInput.value = key || "";
+    const vInput = document.createElement("input");
+    vInput.placeholder = "值";
+    vInput.value = value || "";
+    const del = document.createElement("button");
+    del.className = "kv-del";
+    del.textContent = "\u00d7";
+    del.title = "删除";
+    del.onclick = () => { row.remove(); delCb && delCb(row); };
+    row.appendChild(kInput);
+    row.appendChild(vInput);
+    row.appendChild(del);
+    container.appendChild(row);
+    return { kInput, vInput, row };
+  }
+
+  function renderKv() {
+    kvEditor.innerHTML = "";
+    state.headers.forEach((h) => addKvRow(kvEditor, h[0], h[1], (row) => {
+      state.headers = state.headers.filter((_, i) => i !== [...kvEditor.children].indexOf(row));
+    }));
+    state.queries.forEach((q) => addKvRow(kvEditor, q[0], q[1], (row) => {
+      state.queries = state.queries.filter((_, i) => i !== [...kvEditor.children].indexOf(row));
+    }));
+  }
+
+  $("addHeader").onclick = () => addKvRow(kvEditor, "", "", (row) => {
+    state.headers = state.headers.filter((_, i) => i !== [...kvEditor.children].indexOf(row));
+  });
+
+  // 区分 header 行和 query 行
+  function splitKvRows() {
+    const rows = [...kvEditor.querySelectorAll(".kv-row")];
+    // 先按初始顺序恢复：合并后无法区分，直接重建 —— 用标签前缀标记
+  }
+
+  // 简化：分别维护两组，重新渲染时重新加载输入
+  function collectHeaders() {
+    const out = [];
+    const set = new Set();
+    const rows = [...kvEditor.querySelectorAll(".kv-row")];
+    // 通过 data 属性标记归属
+    rows.forEach((r, i) => {
+      if (r.dataset.group === "headers") {
+        const k = r.querySelector("input").value.trim();
+        const v = r.querySelectorAll("input")[1].value.trim();
+        if (k && !set.has(k.toLowerCase())) { out.push([k, v]); set.add(k.toLowerCase()); }
+      }
+    });
+    return out;
+  }
+
+  function collectQueries() {
+    const out = [];
+    const rows = [...kvEditor.querySelectorAll(".kv-row")];
+    rows.forEach((r) => {
+      if (r.dataset.group === "queries") {
+        const k = r.querySelector("input").value.trim();
+        const v = r.querySelectorAll("input")[1].value.trim();
+        if (k) out.push([k, v]);
+      }
+    });
+    return out;
+  }
+
+  // 重写渲染，带组标记
+  function renderKv2() {
+    kvEditor.innerHTML = "";
+    state.headers.forEach((h) => {
+      const { row } = addKvRow(kvEditor, h[0], h[1]);
+      row.dataset.group = "headers";
+    });
+    state.queries.forEach((q) => {
+      const { row } = addKvRow(kvEditor, q[0], q[1]);
+      row.dataset.group = "queries";
+    });
+  }
+
+  function refreshKv() {
+    const headers = collectHeaders();
+    const queries = collectQueries();
+    state.headers = headers;
+    state.queries = queries;
+  }
+
+  renderKv2();
+
+  $("addHeader").onclick = () => {
+    const { row } = addKvRow(kvEditor, "", "");
+    row.dataset.group = "headers";
+    row.querySelector("input").focus();
+  };
+
+  // ---------- 方法切换 ----------
+  const methodSel = $("method");
+  methodSel.onchange = () => {
+    methodSel.className = methodSel.value.toLowerCase();
+    state.method = methodSel.value;
+    bodyInput.style.opacity = ["GET", "HEAD"].includes(methodSel.value) ? 0.45 : 1;
+  };
+
+  // ---------- 请求体 ----------
+  const bodyType = $("bodyType");
+  const bodyInput = $("bodyInput");
+  const bodyTypeLabel = $("bodyTypeLabel");
+
+  // 各请求体类型对应的 Content-Type
+  const BODY_CT = {
+    json: "application/json",
+    raw: "text/plain",
+    form: "application/x-www-form-urlencoded",
+    none: null,
+  };
+
+  // 各类型输入框占位提示
+  const BODY_PLACEHOLDER = {
+    json: '在此输入 JSON，例如 {"key": "value"}',
+    raw: "在此输入原始文本",
+    form: "在此输入表单，例如 key1=value1&key2=value2",
+    none: "",
+  };
+
+  // 记录当前由 body 类型自动管理的 Content-Type, 切换类型时自动跟随更新
+  let autoCt = (state.headers.find(([k]) => k.toLowerCase() === "content-type") || [null, null])[1];
+
+  function setBodyType(t) {
+    bodyTypeLabel.textContent = t === "none" ? "无请求体" : "Content-Type: " + BODY_CT[t];
+    bodyInput.placeholder = BODY_PLACEHOLDER[t] || "";
+    bodyInput.disabled = t === "none";
+
+    if (t === "none") { autoCt = null; return; }
+
+    const ct = BODY_CT[t];
+    const cur = state.headers.find(([k]) => k.toLowerCase() === "content-type");
+    if (!cur) {
+      // 尚无 Content-Type, 自动补上
+      state.headers = [["Content-Type", ct], ...state.headers];
+      autoCt = ct;
+      renderKv2();
+    } else if (autoCt && cur[1] === autoCt) {
+      // 之前是我们自动设置的, 跟随新类型更新
+      cur[1] = ct;
+      autoCt = ct;
+      renderKv2();
+    }
+    // 否则: 用户手动设置了 Content-Type, 保留其设定
+  }
+
+  bodyType.onchange = () => setBodyType(bodyType.value);
+  setBodyType(bodyType.value);
+
+  // 请求体实际发送内容（编辑框即来源）
+  function getBodyText() {
+    if (bodyType.value === "none") return null;
+    return bodyInput.value;
+  }
+
+  // ---------- 导入 cURL ----------
+  function tokenizeCurl(str) {
+    const tokens = [];
+    let cur = "", inQ = null, esc = false;
+    for (const ch of str) {
+      if (inQ) {
+        // 引号内不做转义处理 (shell 单引号原样保留反斜杠, 双引号也保留以便 JSON 解析)
+        if (ch === inQ) inQ = null;
+        else cur += ch;
+        continue;
+      }
+      if (esc) { cur += ch; esc = false; continue; }
+      if (ch === "\\") { esc = true; continue; }
+      if (ch === '"' || ch === "'") { inQ = ch; }
+      else if (/\s/.test(ch)) { if (cur) { tokens.push(cur); cur = ""; } }
+      else cur += ch;
+    }
+    if (cur) tokens.push(cur);
+    return tokens;
+  }
+
+  function parseCurl(curl) {
+    const s = curl.replace(/\\\r?\n/g, " ");
+    const tokens = tokenizeCurl(s);
+    let method = null, url = null, body = null;
+    const headers = [];
+    const pushHeader = (h) => {
+      const i = h.indexOf(":");
+      if (i > 0) headers.push([h.slice(0, i).trim(), h.slice(i + 1).trim()]);
+    };
+    const dataFlags = new Set(["-d", "--data", "--data-raw", "--data-binary", "--data-urlencode"]);
+    let i = 0;
+    if (tokens[0] && /^curl$/i.test(tokens[0])) i = 1;
+    for (; i < tokens.length; i++) {
+      const t = tokens[i];
+      const low = t.toLowerCase();
+      if (t[0] === "-") {
+        if (low === "-x" || low === "--request") method = tokens[++i];
+        else if (low === "-h" || low === "--header") pushHeader(tokens[++i]);
+        else if (dataFlags.has(low)) {
+          const v = tokens[++i];
+          if (v && v[0] !== "@") body = (body === null ? "" : body) + v; // 忽略 -d @file
+        }
+        else if (low === "-b" || low === "--cookie") pushHeader("Cookie: " + tokens[++i]);
+        else if (low === "-a" || low === "--user-agent") pushHeader("User-Agent: " + tokens[++i]);
+        else if (low === "-u" || low === "--user") {
+          const u = tokens[++i] || "";
+          pushHeader("Authorization: Basic " + btoa(u));
+        }
+        else if (low === "--url") url = tokens[++i];
+        else if (i + 1 < tokens.length && tokens[i + 1][0] !== "-") i++; // 跳过未知带值参数
+      } else if (url === null) url = t;
+    }
+    return { method, url, headers, body };
+  }
+
+  function applyCurl(text) {
+    const parsed = parseCurl(text);
+    if (!parsed.url) { toast("未能从 cURL 中解析出 URL"); return; }
+
+    // 拆分 URL 中的 query 参数
+    let base = parsed.url, qp = [];
+    const qIdx = parsed.url.indexOf("?");
+    if (qIdx >= 0) {
+      base = parsed.url.slice(0, qIdx);
+      parsed.url.slice(qIdx + 1).split("&").forEach((pair) => {
+        if (!pair) return;
+        const eq = pair.indexOf("=");
+        const k = eq >= 0 ? decodeURIComponent(pair.slice(0, eq)) : decodeURIComponent(pair);
+        const v = eq >= 0 ? decodeURIComponent(pair.slice(eq + 1)) : "";
+        qp.push([k, v]);
+      });
+    }
+    $("url").value = base;
+
+    state.headers = parsed.headers.slice();
+    state.queries = qp;
+    renderKv2();
+
+    const m = (parsed.method || (parsed.body ? "POST" : "GET")).toUpperCase();
+    methodSel.value = m;
+    methodSel.onchange();
+
+    const ctHeader = parsed.headers.find(([k]) => k.toLowerCase() === "content-type");
+    const ct = ctHeader ? ctHeader[1] : "";
+    let bt = "none";
+    if (parsed.body) {
+      if (/json/i.test(ct)) bt = "json";
+      else if (/x-www-form-urlencoded/i.test(ct)) bt = "form";
+      else bt = "raw";
+    }
+    bodyType.value = bt;
+    setBodyType(bt);
+    bodyInput.value = parsed.body || "";
+    autoCt = ctHeader ? ctHeader[1] : null;
+
+    toast("已导入 cURL");
+  }
+
+  // cURL 导入弹窗
+  const curlModal = $("curlModal");
+  $("importCurl").onclick = () => { curlModal.classList.add("show"); $("curlInput").focus(); };
+  $("closeCurlModal").onclick = () => curlModal.classList.remove("show");
+  $("cancelCurlModal").onclick = () => curlModal.classList.remove("show");
+  curlModal.onclick = (e) => { if (e.target === curlModal) curlModal.classList.remove("show"); };
+  $("doImportCurl").onclick = () => {
+    const txt = $("curlInput").value.trim();
+    if (!txt) return;
+    applyCurl(txt);
+    curlModal.classList.remove("show");
+  };
+
+  // ---------- Bearer Token ----------
+  $("insertToken").onclick = () => {
+    const token = prompt("输入 Bearer Token:");
+    if (!token) return;
+    const headers = collectHeaders();
+    const idx = headers.findIndex(([k]) => k.toLowerCase() === "authorization");
+    if (idx >= 0) {
+      const row = kvEditor.querySelectorAll(".kv-row")[idx];
+      row.querySelectorAll("input")[1].value = "Bearer " + token;
+    } else {
+      const { row } = addKvRow(kvEditor, "Authorization", "Bearer " + token);
+      row.dataset.group = "headers";
+    }
+    state.headers = collectHeaders();
+  };
+
+  // ---------- JSON 格式化 ----------
+  function formatJsonBody() {
+    if (bodyType.value !== "json") { toast("仅 JSON 类型支持格式化"); return; }
+    try {
+      bodyInput.value = JSON.stringify(JSON.parse(bodyInput.value), null, 2);
+    } catch (e) {
+      toast("当前内容不是合法 JSON: " + e.message);
+    }
+  }
+  $("formatBody").onclick = formatJsonBody;
+
+  // ---------- 构建 URL ----------
+  function buildUrl() {
+    let url = $("url").value.trim();
+    if (!url) { toast("请输入 URL"); return null; }
+    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+    const queries = collectQueries().filter(([k]) => k);
+    if (queries.length) {
+      const qs = queries.map(([k, v]) => encodeURIComponent(k) + "=" + encodeURIComponent(v)).join("&");
+      url += (url.includes("?") ? "&" : "?") + qs;
+    }
+    return url;
+  }
+
+  // ---------- 跨域代理 ----------
+  const proxyPreset = $("proxyPreset");
+  proxyPreset.onchange = () => {
+    $("proxyCustomWrap").style.display = proxyPreset.value === "custom" ? "" : "none";
+    checkLocalProxy();
+  };
+
+  const PROXY_PRESETS = {
+    local:      (u) => "http://localhost:8787/?url=" + encodeURIComponent(u),
+    corslol:    (u) => "https://api.cors.lol/?url=" + encodeURIComponent(u),
+    corsproxyio:(u) => "https://corsproxy.io/?" + encodeURIComponent(u),
+    allorigins: (u) => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
+  };
+
+  // 本地代理是否在线
+  let localProxyAlive = false;
+  function checkLocalProxy() {
+    fetch("http://localhost:8787/?url=" + encodeURIComponent("http://localhost:8787/ping"))
+      .then((r) => r.text())
+      .then((t) => { localProxyAlive = t === "pong"; })
+      .catch(() => { localProxyAlive = false; });
+  }
+  checkLocalProxy();
+  setInterval(checkLocalProxy, 5000);
+
+  // 按优先级构建代理 URL 列表，逐个尝试
+  function buildProxyTargets(url) {
+    const PUBLIC_ORDER = ["corslol", "corsproxyio", "allorigins"];
+    const builders = [];
+    const preset = proxyPreset.value;
+
+    if (preset === "custom") {
+      const p = $("proxyUrl").value.trim();
+      if (p) {
+        builders.push(() => (/[?&]url=$/i.test(p) || p.endsWith("?")) ? p + encodeURIComponent(url) : p + url);
+      }
+    } else if (preset === "local") {
+      if (localProxyAlive) builders.push(PROXY_PRESETS.local);
+      PUBLIC_ORDER.forEach((k) => builders.push(PROXY_PRESETS[k]));
+    } else {
+      builders.push(PROXY_PRESETS[preset]);
+      PUBLIC_ORDER.filter((k) => k !== preset).forEach((k) => builders.push(PROXY_PRESETS[k]));
+    }
+
+    return builders.map((b) => b(url));
+  }
+
+  // 逐个尝试直到成功
+  async function fetchWithFailover(targets, init) {
+    let lastErr = null;
+    for (let i = 0; i < targets.length; i++) {
+      try {
+        const resp = await fetch(targets[i], init);
+        return { resp, used: targets[i] };
+      } catch (e) {
+        lastErr = e;
+        console.warn("[proxy] 尝试失败:", targets[i], e.message);
+      }
+    }
+    throw lastErr;
+  }
+
+  function describeProxy(u) {
+    if (/localhost:8787/.test(u)) return "本地代理";
+    if (/cors\.lol/.test(u)) return "cors.lol";
+    if (/corsproxy\.io/.test(u)) return "corsproxy.io";
+    if (/allorigins/.test(u)) return "allorigins";
+    try { return new URL(u).origin; } catch (e) { return u.slice(0, 40); }
+  }
+
+  // ---------- 发送 ----------
+  const sendBtn = $("sendBtn");
+  const responseEl = $("jsonResponseView");
+  const rawResponseView = $("rawResponseView");
+  const statusBadge = $("statusBadge");
+  const resTime = $("resTime");
+  const resSize = $("resSize");
+
+  let currentRes = null; // {status, time, size, text, json, headers, url, method}
+
+  async function send() {
+    const url = buildUrl();
+    if (!url) return;
+
+    refreshKv();
+    const headers = collectHeaders().filter(([k]) => k);
+    const bodyText = getBodyText();
+
+    state.method = methodSel.value;
+    state.url = url;
+
+    sendBtn.disabled = true;
+    sendBtn.textContent = "发送中...";
+    statusBadge.textContent = "";
+    resTime.textContent = "";
+    resSize.textContent = "";
+    rawResponseView.style.display = "none";
+    responseEl.classList.remove("placeholder");
+
+    const init = { method: state.method, headers: {} };
+    headers.forEach(([k, v]) => { init.headers[k] = v; });
+    if (bodyText && state.method !== "GET" && state.method !== "HEAD") {
+      init.body = bodyText;
+    }
+
+    const t0 = performance.now();
+    try {
+      const targets = $("corsProxy").checked ? buildProxyTargets(url) : [url];
+      const { resp, used } = await fetchWithFailover(targets, init);
+      const t1 = performance.now();
+      const text = await resp.text();
+
+      currentRes = {
+        status: resp.status,
+        time: (t1 - t0).toFixed(0),
+        size: new Blob([text]).size,
+        text,
+        json: null,
+        headers: Object.fromEntries(resp.headers.entries()),
+        url,
+        via: $("corsProxy").checked ? describeProxy(used) : "",
+        method: state.method,
+      };
+      try { currentRes.json = JSON.parse(text); } catch (e) {}
+
+      renderResponse();
+      saveHistory();
+      toast("请求完成 " + resp.status);
+    } catch (e) {
+      const t1 = performance.now();
+      currentRes = {
+        status: 0, time: (t1 - t0).toFixed(0), size: 0,
+        text: "", json: null, headers: {}, url, method: state.method,
+        error: e.message,
+      };
+      statusBadge.textContent = "错误";
+      statusBadge.className = "status-5xx";
+      resTime.textContent = (t1 - t0).toFixed(0) + " ms";
+      responseEl.classList.remove("placeholder");
+      rawResponseView.style.display = "none";
+      responseEl.className = "code-block err";
+      responseEl.textContent = "请求失败: " + e.message +
+        "\n\n提示: 如果是浏览器跨域 (CORS) 限制，请勾选「跨域代理」；" +
+        "若公共代理不可用，推荐在项目目录运行 `node server.js` 启用本地代理（http://localhost:8787）。";
+      resSize.textContent = "";
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.textContent = "发送";
+    }
+  }
+
+  function renderResponse() {
+    const r = currentRes;
+    statusBadge.textContent = r.status ? ("HTTP " + r.status) : "错误";
+    statusBadge.className = r.status ? ("status-" + (r.status < 300 ? "2xx" : r.status < 400 ? "3xx" : r.status < 500 ? "4xx" : "5xx")) : "status-5xx";
+    resTime.textContent = r.time + " ms";
+    resSize.textContent = (r.via ? "via " + r.via + " · " : "") + (r.size ? (r.size < 1024 ? r.size + " B" : (r.size / 1024).toFixed(1) + " KB") : "");
+
+    if (r.json) {
+      responseEl.classList.remove("code-block", "err");
+      responseEl.className = "code-block";
+      responseEl.textContent = JSON.stringify(r.json, null, 2);
+    } else if (r.text) {
+      responseEl.classList.remove("err");
+      responseEl.className = "code-block";
+      responseEl.textContent = r.text;
+    } else {
+      responseEl.textContent = "(空响应)";
+    }
+    $("viewJson").textContent = r.json ? "JSON 视图" : "文本视图";
+  }
+
+  sendBtn.onclick = send;
+  $("url").addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
+  methodSel.onchange();
+
+  // ---------- 响应视图切换 ----------
+  $("viewJson").onclick = () => {
+    if (!currentRes) return;
+    rawResponseView.style.display = "none";
+    responseEl.style.display = "";
+    renderResponse();
+  };
+  $("viewRaw").onclick = () => {
+    if (!currentRes) return;
+    responseEl.style.display = "none";
+    rawResponseView.style.display = "";
+    rawResponseView.className = "code-block";
+    rawResponseView.textContent = currentRes.text;
+  };
+
+  // 格式化响应 JSON（对最小化/紧凑的 JSON 重新缩进）
+  $("formatRes").onclick = () => {
+    if (!currentRes) { toast("尚无响应"); return; }
+    try {
+      const obj = JSON.parse(currentRes.text);
+      currentRes.json = obj;
+      responseEl.classList.remove("placeholder", "err");
+      rawResponseView.style.display = "none";
+      responseEl.style.display = "";
+      responseEl.className = "code-block";
+      responseEl.textContent = JSON.stringify(obj, null, 2);
+      $("viewJson").textContent = "JSON 视图";
+      toast("已格式化响应 JSON");
+    } catch (e) {
+      toast("响应不是合法 JSON: " + e.message);
+    }
+  };
+
+  // ---------- 复制 / 下载 ----------
+  $("copyRes").onclick = () => {
+    if (!currentRes) return;
+    navigator.clipboard.writeText(currentRes.text).then(
+      () => toast("已复制到剪贴板"),
+      () => toast("复制失败")
+    );
+  };
+  $("downloadRes").onclick = () => {
+    if (!currentRes) return;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([currentRes.text]));
+    a.download = "response.txt";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast("已下载");
+  };
+
+  // ---------- 历史记录 ----------
+  function loadHistory() {
+    try { return JSON.parse(localStorage.getItem("httpTool.history") || "[]"); }
+    catch (e) { return []; }
+  }
+  function saveHistory() {
+    if (!currentRes) return;
+    const item = {
+      method: state.method,
+      url: currentRes.url,
+      status: currentRes.status,
+      time: new Date().toLocaleTimeString(),
+      date: new Date().toLocaleDateString(),
+    };
+    state.history.unshift(item);
+    state.history = state.history.slice(0, 50);
+    try { localStorage.setItem("httpTool.history", JSON.stringify(state.history)); } catch (e) {}
+  }
+  function renderHistory() {
+    const list = $("histList");
+    list.innerHTML = "";
+    if (!state.history.length) {
+      list.innerHTML = '<div class="placeholder" style="padding:30px">暂无历史记录</div>';
+      return;
+    }
+    state.history.forEach((h) => {
+      const el = document.createElement("div");
+      el.className = "hist-item";
+      el.innerHTML =
+        '<span class="hist-method" style="color:' + methodColor(h.method) + '">' + h.method + "</span>" +
+        '<span class="hist-url">' + escapeHtml(h.url) + "</span>" +
+        '<span>' + (h.status ? h.status : "-") + "</span>" +
+        '<span class="hist-time">' + h.date + " " + h.time + "</span>";
+      el.onclick = () => {
+        methodSel.value = h.method;
+        methodSel.onchange();
+        $("url").value = h.url;
+        $("historyModal").classList.remove("show");
+      };
+      list.appendChild(el);
+    });
+  }
+  function methodColor(m) {
+    const c = { GET: "#3ecf8e", POST: "#ffb020", PUT: "#4f8cff", PATCH: "#b083ff", DELETE: "#ff5c5c", HEAD: "#3ecf8e", OPTIONS: "#8b90a3" };
+    return c[m] || "#8b90a3";
+  }
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  $("historyBtn").onclick = () => { renderHistory(); $("historyModal").classList.add("show"); };
+  $("closeModal").onclick = () => $("historyModal").classList.remove("show");
+  $("historyModal").onclick = (e) => { if (e.target === $("historyModal")) $("historyModal").classList.remove("show"); };
+  $("clearHistory").onclick = () => {
+    if (confirm("确认清空全部历史记录？")) {
+      state.history = [];
+      localStorage.removeItem("httpTool.history");
+      toast("已清空");
+    }
+  };
+
+  // ---------- Toast ----------
+  function toast(msg) {
+    let t = document.querySelector(".toast");
+    if (!t) {
+      t = document.createElement("div");
+      t.className = "toast";
+      t.style.cssText = "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#232734;color:#e6e8ee;padding:8px 18px;border-radius:8px;font-size:13px;z-index:999;border:1px solid #2d3242;box-shadow:0 4px 16px rgba(0,0,0,.4);transition:opacity .3s";
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.opacity = "1";
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.style.opacity = "0"; }, 2000);
+  }
+})();
+</script>
+</body>
+</html>

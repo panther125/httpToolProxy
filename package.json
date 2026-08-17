@@ -1,0 +1,9 @@
+{
+  "name": "http-tool-proxy",
+  "version": "1.0.0",
+  "description": "本地跨域代理 / 静态服务器 (零依赖 Node.js)",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  }
+}
