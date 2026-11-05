@@ -7,262 +7,464 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
-  --bg: #0f1117;
-  --panel: #1a1d27;
-  --panel2: #232734;
-  --border: #2d3242;
-  --text: #e6e8ee;
-  --muted: #8b90a3;
-  --accent: #4f8cff;
-  --accent2: #6ea8ff;
-  --green: #3ecf8e;
-  --red: #ff5c5c;
-  --orange: #ffb020;
-  --purple: #b083ff;
+  --bg: #0a0c11;
+  --panel: #11151c;
+  --panel-2: #171c24;
+  --panel-3: #1d232d;
+  --border: #232a35;
+  --border-strong: #323b49;
+  --text: #e8ecf3;
+  --text-dim: #a6b0c0;
+  --muted: #727d8f;
+  --accent: #5d8dff;
+  --accent-2: #82a9ff;
+  --accent-soft: rgba(93, 141, 255, .13);
+  --green: #34d399;
+  --red: #f26d6d;
+  --orange: #f0a93b;
+  --purple: #ab8bff;
+  --radius-sm: 6px;
+  --radius: 9px;
+  --font-ui: "Inter", "Segoe UI Variable", "Segoe UI", "Microsoft YaHei", sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", "Consolas", "Courier New", monospace;
+  --shadow-pop: 0 20px 52px rgba(0, 0, 0, .58);
 }
+html { height: 100%; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
-  background: var(--bg);
+  font-family: var(--font-ui);
+  background:
+    radial-gradient(1100px 520px at 10% -14%, rgba(93, 141, 255, .10), transparent 62%),
+    radial-gradient(900px 460px at 96% 4%, rgba(171, 139, 255, .06), transparent 60%),
+    var(--bg);
   color: var(--text);
   height: 100vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  font-size: 13px;
 }
 header {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 16px;
-  background: var(--panel);
+  display: flex; align-items: center; gap: 10px; flex: none;
+  height: 58px; padding: 0 18px;
+  background: rgba(17, 21, 28, .86);
   border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
 }
-header h1 {
-  font-size: 15px; font-weight: 600; white-space: nowrap;
-  background: linear-gradient(90deg, var(--accent), var(--accent2));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand-mark {
+  width: 29px; height: 29px; flex: none; border-radius: 8px;
+  display: grid; place-items: center;
+  background: var(--accent-soft); border: 1px solid rgba(93, 141, 255, .35);
+  color: var(--accent-2);
 }
-header .sub { color: var(--muted); font-size: 12px; }
-.tabs {
-  display: flex; gap: 2px; background: var(--panel2); padding: 3px; border-radius: 8px;
-}
-.tab {
-  padding: 4px 10px; font-size: 12px; color: var(--muted); cursor: pointer;
-  border-radius: 6px; border: none; background: transparent;
-}
-.tab.active { background: var(--accent); color: #fff; }
+.brand-mark svg { width: 15px; height: 15px; }
+header h1 { font-size: 15px; font-weight: 650; letter-spacing: .2px; white-space: nowrap; }
+header .sub { color: var(--muted); font-size: 12px; white-space: nowrap; }
 .spacer { flex: 1; }
-#historyBtn, #clearHistory {
-  background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
-  padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
+.proxy-pill {
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
+  font-size: 11px; color: var(--muted); white-space: nowrap;
+  border: 1px solid var(--border); background: var(--panel-2);
+  padding: 4px 10px; border-radius: 999px;
 }
-#historyBtn:hover, #clearHistory:hover { color: var(--text); border-color: var(--accent); }
+.proxy-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+.proxy-pill.online { color: var(--green); border-color: rgba(52, 211, 153, .3); background: rgba(52, 211, 153, .08); }
+.proxy-pill.online .dot { background: var(--green); box-shadow: 0 0 0 3px rgba(52, 211, 153, .14); }
+.proxy-pill.offline { color: var(--red); border-color: rgba(242, 109, 109, .28); background: rgba(242, 109, 109, .07); }
+.proxy-pill.offline .dot { background: var(--red); }
+#historyBtn, #clearHistory {
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
+  background: transparent; color: var(--text-dim);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 6px 11px; font-size: 12px; cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+#historyBtn:hover { color: var(--text); border-color: var(--border-strong); background: var(--panel-3); }
+#clearHistory { color: var(--muted); }
+#clearHistory:hover { color: var(--red); border-color: rgba(242, 109, 109, .4); background: rgba(242, 109, 109, .06); }
 
 main { flex: 1; display: flex; overflow: hidden; }
 
 .request-panel {
-  width: 46%; min-width: 420px; display: flex; flex-direction: column;
-  border-right: 1px solid var(--border); overflow-y: auto;
+  width: 44%; min-width: 400px; max-width: 620px; display: flex; flex-direction: column;
+  border-right: 1px solid var(--border); background: var(--panel); overflow: hidden;
 }
-.response-panel { flex: 1; display: flex; flex-direction: column; }
+.response-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--panel); }
 
-.section-title {
-  font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px;
-  padding: 8px 12px; background: var(--panel); border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 8px;
+/* 面板标题条 */
+.panel-head {
+  display: flex; align-items: center; gap: 8px; flex: none;
+  min-height: 46px; padding: 8px 14px;
+  border-bottom: 1px solid var(--border); background: var(--panel-2);
 }
+.res-meta { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.res-label { font-size: 12px; font-weight: 600; color: var(--text-dim); letter-spacing: .3px; }
 
-.url-bar { display: flex; gap: 8px; padding: 10px 12px; align-items: center; }
+/* 分段控件（Tab / 视图切换） */
+.segmented {
+  display: inline-flex; align-items: center; gap: 2px; flex: none;
+  background: var(--panel-3); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 3px;
+}
+.seg-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: none; background: transparent; color: var(--text-dim);
+  font-family: inherit; font-size: 12px; font-weight: 500;
+  padding: 5px 12px; border-radius: 6px; cursor: pointer;
+  transition: color .15s, background .15s;
+  white-space: nowrap;
+}
+.seg-btn:hover { color: var(--text); background: rgba(255, 255, 255, .04); }
+.seg-btn.active { background: var(--accent-soft); color: var(--accent-2); box-shadow: inset 0 0 0 1px rgba(93, 141, 255, .28); }
+.seg-count {
+  font-size: 10px; line-height: 1; padding: 2px 5px; border-radius: 999px;
+  background: rgba(255, 255, 255, .07); color: var(--muted);
+}
+.seg-btn.active .seg-count { background: rgba(93, 141, 255, .22); color: var(--accent-2); }
+
+/* 请求区 */
+.url-bar { display: flex; gap: 8px; padding: 14px; align-items: center; flex: none; }
 select#method {
-  background: var(--panel2); color: var(--text); border: 1px solid var(--border);
-  border-radius: 6px; padding: 8px 6px; font-size: 13px; font-weight: 600; cursor: pointer;
+  appearance: none; -webkit-appearance: none;
+  background: var(--panel-2); color: var(--text);
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  padding: 9px 26px 9px 10px; font-size: 12px; font-weight: 700;
+  font-family: var(--font-mono); letter-spacing: .3px; cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23727d8f' stroke-width='1.4'/></svg>");
+  background-repeat: no-repeat; background-position: right 9px center;
+  transition: border-color .15s, color .15s;
 }
-select#method.get { color: var(--green); }
-select#method.post { color: var(--orange); }
-select#method.put { color: var(--accent); }
-select#method.patch { color: var(--purple); }
-select#method.delete { color: var(--red); }
+select#method:focus-visible { outline: 2px solid rgba(93, 141, 255, .45); outline-offset: 1px; }
+select#method.get { color: var(--green); border-color: rgba(52, 211, 153, .35); }
+select#method.post { color: var(--orange); border-color: rgba(240, 169, 59, .35); }
+select#method.put { color: var(--accent-2); border-color: rgba(93, 141, 255, .4); }
+select#method.patch { color: var(--purple); border-color: rgba(171, 139, 255, .38); }
+select#method.delete { color: var(--red); border-color: rgba(242, 109, 109, .38); }
+
+.url-wrap { flex: 1; position: relative; display: flex; min-width: 0; }
 #url {
-  flex: 1; background: var(--panel2); color: var(--text); border: 1px solid var(--border);
-  border-radius: 6px; padding: 8px 12px; font-size: 13px; font-family: "Consolas", monospace;
+  flex: 1; min-width: 0;
+  background: var(--panel-2); color: var(--text);
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  padding: 9px 12px; font-size: 12.5px; font-family: var(--font-mono);
+  transition: border-color .15s, box-shadow .15s;
 }
-#url:focus { outline: none; border-color: var(--accent); }
+#url::placeholder { color: #5b6577; font-family: var(--font-ui); }
+#url:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(93, 141, 255, .16); }
 #sendBtn {
-  background: var(--accent); color: #fff; border: none; border-radius: 6px;
-  padding: 8px 22px; font-size: 13px; font-weight: 600; cursor: pointer;
-  transition: background .15s;
+  display: inline-flex; align-items: center; gap: 7px; flex: none;
+  background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm);
+  padding: 9px 18px; font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: background .15s, transform .12s, box-shadow .15s;
+  box-shadow: 0 2px 10px rgba(93, 141, 255, .22);
 }
-#sendBtn:hover { background: var(--accent2); }
-#sendBtn:disabled { background: var(--panel2); color: var(--muted); cursor: not-allowed; }
+#sendBtn:hover:not(:disabled) { background: #6f9bff; box-shadow: 0 4px 16px rgba(93, 141, 255, .3); }
+#sendBtn:active:not(:disabled) { transform: translateY(1px); }
+#sendBtn:disabled { background: var(--panel-3); color: var(--muted); cursor: not-allowed; box-shadow: none; }
+#sendBtn svg { width: 13px; height: 13px; }
 
-.toolbar { display: flex; gap: 6px; padding: 0 12px 10px; }
-.toolbar button {
-  background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
-  padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
+/* 代理选项行 */
+.option-row {
+  display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+  padding: 0 14px 12px; font-size: 12px; flex: none;
 }
-.toolbar button:hover { color: var(--text); border-color: var(--accent); }
-
-.option-row { display: flex; gap: 14px; padding: 0 12px 10px; align-items: center; font-size: 12px; }
-.option-row label { color: var(--muted); display: flex; align-items: center; gap: 5px; cursor: pointer; }
-.option-row input[type="text"] {
-  background: var(--panel2); color: var(--text); border: 1px solid var(--border);
-  border-radius: 4px; padding: 3px 8px; font-size: 12px; width: 90px;
+.option-row label { color: var(--muted); display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.option-row input[type="checkbox"] { accent-color: var(--accent); width: 13px; height: 13px; cursor: pointer; }
+.option-row select, .option-row input[type="text"] {
+  background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 5px 9px; font-size: 12px; font-family: inherit;
 }
-.option-row input[type="text"]:focus { outline: none; border-color: var(--accent); }
+.option-row select:focus-visible, .option-row input[type="text"]:focus { outline: none; border-color: var(--accent); }
+.option-row input[type="text"] { width: 100px; }
 
-.editor-area { flex: 1; overflow: auto; padding: 0 12px 12px; display: flex; flex-direction: column; }
+/* Tab 内容区 */
+.pane { flex: 1; display: none; flex-direction: column; min-height: 0; }
+.pane.active { display: flex; }
+.pane-toolbar {
+  display: flex; gap: 6px; flex-wrap: wrap; flex: none;
+  padding: 0 14px 10px;
+}
+.pane-toolbar button {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--panel-2); color: var(--text-dim);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 5px 10px; font-family: inherit; font-size: 12px; cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.pane-toolbar button:hover { color: var(--text); border-color: var(--border-strong); background: var(--panel-3); }
+.pane-toolbar button svg { width: 11px; height: 11px; opacity: .85; }
 
-.kv-editor { flex: 1; display: flex; flex-direction: column; }
-.kv-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: center; }
+.editor-area { flex: 1; overflow: auto; padding: 0 14px 14px; display: flex; flex-direction: column; min-height: 0; }
+
+.kv-editor { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.kv-row { display: flex; gap: 7px; align-items: center; }
 .kv-row input {
-  flex: 1; background: var(--panel2); color: var(--text); border: 1px solid var(--border);
-  border-radius: 4px; padding: 6px 10px; font-size: 12px;
+  flex: 1; min-width: 0;
+  background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 7px 10px; font-size: 12px; font-family: var(--font-mono);
+  transition: border-color .15s, box-shadow .15s;
 }
-.kv-row input:focus { outline: none; border-color: var(--accent); }
-.kv-del { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 15px; }
-.kv-del:hover { color: var(--red); }
+.kv-row input::placeholder { color: #5b6577; font-family: var(--font-ui); }
+.kv-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(93, 141, 255, .13); }
+.kv-del {
+  flex: none; width: 26px; height: 26px; display: grid; place-items: center;
+  background: transparent; border: 1px solid transparent; border-radius: var(--radius-sm);
+  color: var(--muted); cursor: pointer; font-size: 14px; line-height: 1;
+  transition: color .15s, background .15s, border-color .15s;
+}
+.kv-del:hover { color: var(--red); background: rgba(242, 109, 109, .08); border-color: rgba(242, 109, 109, .25); }
+.kv-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 26px 10px; color: var(--muted); font-size: 12px;
+  border: 1px dashed var(--border); border-radius: var(--radius); text-align: center;
+}
+.kv-empty strong { color: var(--text-dim); font-weight: 500; }
 .add-kv {
-  align-self: flex-start; background: transparent; color: var(--accent); border: none;
-  font-size: 12px; cursor: pointer; padding: 4px 0;
+  display: inline-flex; align-items: center; gap: 5px; align-self: flex-start;
+  background: transparent; color: var(--accent-2); border: 1px dashed rgba(93, 141, 255, .35);
+  border-radius: var(--radius-sm); font-family: inherit; font-size: 12px;
+  cursor: pointer; padding: 6px 12px; margin-top: 2px;
+  transition: background .15s, border-color .15s;
 }
-.add-kv:hover { color: var(--accent2); }
+.add-kv:hover { background: var(--accent-soft); border-color: var(--accent); }
 
-.body-area { flex: 1; display: flex; flex-direction: column; }
-#body {
-  flex: 1; width: 100%; resize: none;
-  background: var(--panel2); color: var(--text); border: 1px solid var(--border);
-  border-radius: 6px; padding: 10px; font-size: 12px; font-family: "Consolas", monospace;
-  line-height: 1.5; min-height: 120px;
+.tabs-bar { padding: 0 14px 12px; flex: none; }
+.kv-editor:empty { flex: 1; }
+.kv-editor:empty::before {
+  content: attr(data-empty);
+  display: flex; align-items: center; justify-content: center;
+  min-height: 150px; padding: 20px;
+  border: 1px dashed var(--border); border-radius: var(--radius);
+  color: var(--muted); font-size: 12px; text-align: center;
 }
-#body:focus { outline: none; border-color: var(--accent); }
-.body-meta { display: flex; gap: 10px; align-items: center; padding: 6px 0; font-size: 12px; }
-.body-meta label { color: var(--muted); }
+.resp-actions { padding: 10px 14px; border-bottom: 1px solid var(--border); align-items: center; }
+
+.body-area { flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.body-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; flex: none; font-size: 12px; }
+.body-meta label { color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
 .body-meta select {
-  background: var(--panel2); color: var(--text); border: 1px solid var(--border);
-  border-radius: 4px; padding: 3px 8px; font-size: 12px;
+  appearance: none; -webkit-appearance: none;
+  background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 5px 24px 5px 9px; font-size: 12px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23727d8f' stroke-width='1.4'/></svg>");
+  background-repeat: no-repeat; background-position: right 8px center;
 }
 .body-type-label {
-  margin-left: auto; color: var(--muted); font-size: 11px;
-  background: var(--panel2); padding: 2px 8px; border-radius: 4px;
+  margin-left: auto; color: var(--muted); font-size: 10.5px;
+  font-family: var(--font-mono); background: var(--panel-2);
+  padding: 3px 8px; border-radius: 5px; border: 1px solid var(--border);
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .body-meta button.mini-btn {
-  margin-left: 8px; background: var(--panel2); color: var(--muted);
-  border: 1px solid var(--border); border-radius: 4px; padding: 3px 10px;
-  font-size: 12px; cursor: pointer;
+  background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 5px 10px; font-family: inherit;
+  font-size: 12px; cursor: pointer; transition: color .15s, border-color .15s;
 }
-.body-meta button.mini-btn:hover { color: var(--text); border-color: var(--accent); }
+.body-meta button.mini-btn:hover { color: var(--text); border-color: var(--border-strong); }
 
 #bodyInput {
-  flex: 1; width: 100%; resize: none; min-height: 160px;
-  background: var(--panel2); color: var(--text); border: 1px solid var(--border);
-  border-radius: 6px; padding: 10px; font-size: 12px; white-space: pre;
-  font-family: "Consolas", monospace; line-height: 1.5;
+  flex: 1; width: 100%; min-height: 150px; resize: none;
+  background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 11px 12px; font-size: 12.5px;
+  white-space: pre; font-family: var(--font-mono); line-height: 1.65;
+  transition: border-color .15s, box-shadow .15s, opacity .2s;
 }
-#bodyInput:focus { outline: none; border-color: var(--accent); }
+#bodyInput::placeholder { color: #5b6577; }
+#bodyInput:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(93, 141, 255, .13); }
+#bodyInput:disabled { opacity: .4; cursor: not-allowed; }
 
-.res-meta { display: flex; align-items: center; gap: 10px; }
+/* 响应区 */
 #statusBadge {
-  font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 4px;
+  display: inline-flex; align-items: center;
+  font-size: 11px; font-weight: 650; font-family: var(--font-mono);
+  padding: 3px 9px; border-radius: 999px; white-space: nowrap;
 }
-.status-2xx { background: rgba(62,207,142,.15); color: var(--green); }
-.status-3xx { background: rgba(110,168,255,.15); color: var(--accent2); }
-.status-4xx { background: rgba(255,92,92,.15); color: var(--red); }
-.status-5xx { background: rgba(255,176,32,.15); color: var(--orange); }
-#resTime, #resSize { color: var(--muted); font-size: 11px; }
+.status-2xx { background: rgba(52,211,153,.13); color: var(--green); }
+.status-3xx { background: rgba(93,141,255,.14); color: var(--accent-2); }
+.status-4xx { background: rgba(242,109,109,.13); color: var(--red); }
+.status-5xx { background: rgba(240,169,59,.13); color: var(--orange); }
+#resTime, #resSize { color: var(--muted); font-size: 11px; font-family: var(--font-mono); white-space: nowrap; }
 
-.response-body { flex: 1; overflow: auto; padding: 0; }
-#response {
-  width: 100%; height: 100%; resize: none;
-  background: #12141d; color: #d8dde8; border: none; padding: 12px;
-  font-size: 12px; font-family: "Consolas", "Courier New", monospace; line-height: 1.5;
-  white-space: pre; overflow: auto;
-}
-#response:focus { outline: none; }
-
+.response-body { flex: 1; overflow: auto; min-height: 0; background: #0b0e13; }
+#jsonResponseView, #rawResponseView { min-height: 100%; }
 #rawResponseView { display: none; }
 
+/* 响应过大警告横幅 */
+.res-warn {
+  display: none; align-items: center; gap: 8px; flex: none;
+  padding: 9px 14px; font-size: 12px;
+  background: rgba(240, 169, 59, .1); color: var(--orange);
+  border-bottom: 1px solid rgba(240, 169, 59, .2);
+}
+.res-warn::before { content: "⚠"; font-size: 14px; }
+
+/* 图片预览 */
+#imageResponseView {
+  display: none; height: 100%; padding: 16px;
+  background: #0b0e13; overflow: auto;
+  align-items: center; justify-content: center;
+}
+#imagePreview {
+  max-width: 100%; max-height: 100%; object-fit: contain;
+  border-radius: 8px; box-shadow: 0 8px 28px rgba(0, 0, 0, .55);
+}
+
 .code-block {
-  background: #12141d; padding: 10px 12px; border-radius: 4px;
-  font-family: "Consolas", monospace; font-size: 12px; white-space: pre-wrap;
-  word-break: break-all; overflow-x: auto;
+  display: block; min-height: 100%; padding: 14px; background: transparent;
+  font-family: var(--font-mono); font-size: 12.5px; line-height: 1.65;
+  white-space: pre-wrap; word-break: break-word; overflow-x: auto;
+  color: #d6dde8;
 }
 .code-block.err { color: var(--red); }
 .placeholder {
-  display: flex; align-items: center; justify-content: center; height: 100%;
-  color: var(--muted); font-size: 13px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; height: 100%; min-height: 200px; padding: 24px;
+  color: var(--muted); font-size: 13px; text-align: center;
+}
+.placeholder::before {
+  content: "→"; width: 40px; height: 40px;
+  display: grid; place-items: center; border-radius: 12px;
+  border: 1px dashed var(--border-strong); color: var(--text-dim); font-size: 18px;
 }
 
-/* History */
+/* History / 弹窗 */
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none;
-  align-items: center; justify-content: center; z-index: 100;
+  position: fixed; inset: 0; background: rgba(5, 7, 10, .68); display: none;
+  align-items: center; justify-content: center; z-index: 100; padding: 20px;
+  backdrop-filter: blur(6px);
 }
-.modal-overlay.show { display: flex; }
+.modal-overlay.show { display: flex; animation: fade .16s ease-out; }
 .modal {
-  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-  width: 640px; max-width: 92vw; max-height: 76vh; display: flex; flex-direction: column;
+  background: var(--panel); border: 1px solid var(--border-strong);
+  border-radius: var(--radius); width: 640px; max-width: 94vw; max-height: 82vh;
+  display: flex; flex-direction: column; box-shadow: var(--shadow-pop);
+  animation: pop .18s ease-out;
 }
-.modal-head { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); }
-.modal-head h3 { font-size: 14px; flex: 1; }
-.modal-head button { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; }
-.modal-head button:hover { color: var(--text); }
-.modal-body { overflow: auto; padding: 8px 0; }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop { from { opacity: 0; transform: translateY(6px) scale(.99); } to { opacity: 1; transform: none; } }
+.modal-head { display: flex; align-items: center; gap: 8px; padding: 13px 18px; border-bottom: 1px solid var(--border); flex: none; }
+.modal-head h3 { font-size: 14px; font-weight: 600; flex: 1; }
+.modal-head button {
+  width: 28px; height: 28px; display: grid; place-items: center;
+  background: transparent; border: 1px solid transparent; border-radius: var(--radius-sm);
+  color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer;
+  transition: color .15s, background .15s;
+}
+.modal-head button:hover { color: var(--text); background: var(--panel-3); }
+.modal-body { overflow: auto; padding: 6px 0; flex: 1; }
+.modal-body.pad { padding: 16px 18px; }
 .hist-item {
-  display: flex; align-items: center; gap: 10px; padding: 8px 16px; cursor: pointer;
+  display: flex; align-items: center; gap: 10px; padding: 9px 18px; cursor: pointer;
   border-bottom: 1px solid var(--border); font-size: 12px;
+  transition: background .12s;
 }
-.hist-item:hover { background: var(--panel2); }
-.hist-method { font-weight: 600; min-width: 52px; }
-.hist-url { flex: 1; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: "Consolas", monospace; }
-.hist-time { color: var(--muted); font-size: 11px; }
-.modal-foot { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
-.modal-foot button { background: var(--accent); color: #fff; border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; cursor: pointer; margin-left: 8px; }
-.modal-foot button.secondary { background: var(--panel2); color: var(--muted); border: 1px solid var(--border); }
-.modal-foot button:hover { filter: brightness(1.08); }
+.hist-item:last-child { border-bottom: none; }
+.hist-item:hover { background: var(--panel-2); }
+.hist-method { font-weight: 700; font-size: 11px; min-width: 54px; font-family: var(--font-mono); }
+.hist-url { flex: 1; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-mono); font-size: 11.5px; }
+.hist-time { color: var(--muted); font-size: 11px; white-space: nowrap; }
+.hist-status { font-family: var(--font-mono); font-size: 11px; min-width: 34px; text-align: center; }
+.hist-empty { padding: 34px 18px; text-align: center; color: var(--muted); font-size: 12px; }
+.modal-foot { padding: 12px 18px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; flex: none; }
+.modal-foot button {
+  background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm);
+  padding: 8px 18px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: background .15s;
+}
+.modal-foot button:hover { background: #6f9bff; }
+.modal-foot button.secondary { background: transparent; color: var(--text-dim); border: 1px solid var(--border); font-weight: 500; }
+.modal-foot button.secondary:hover { color: var(--text); border-color: var(--border-strong); background: var(--panel-2); }
 #curlInput {
-  width: 100%; height: 220px; resize: none; box-sizing: border-box;
-  background: #12141d; color: #d8dde8; border: 1px solid var(--border);
-  border-radius: 6px; padding: 10px; font-size: 12px; line-height: 1.5;
-  font-family: "Consolas", monospace;
+  width: 100%; height: 250px; resize: vertical; box-sizing: border-box;
+  background: #0b0e13; color: #d6dde8; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px; font-size: 12.5px; line-height: 1.6;
+  font-family: var(--font-mono);
+  transition: border-color .15s, box-shadow .15s;
 }
-#curlInput:focus { outline: none; border-color: var(--accent); }
+#curlInput:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(93, 141, 255, .14); }
+
+/* Toast 提示 */
+.toast {
+  position: fixed; left: 50%; bottom: 26px; z-index: 300;
+  max-width: min(420px, 90vw);
+  padding: 9px 16px; border-radius: 999px;
+  background: var(--panel-3); color: var(--text);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+  font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  opacity: 0; transform: translate(-50%, 8px);
+  transition: opacity .18s, transform .18s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-thumb { background: #333a4d; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #414a63; }
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-thumb { background: #2c3442; border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: #3a465a; background-clip: padding-box; border: 2px solid transparent; }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* 响应式 */
+@media (max-width: 960px) {
+  body { height: auto; min-height: 100vh; overflow: auto; }
+  main {
+    flex-direction: column; overflow: visible; gap: 0;
+  }
+  .request-panel { width: 100%; max-width: none; min-width: 0; height: 54vh; min-height: 380px; border-right: none; border-bottom: 1px solid var(--border); }
+  .response-panel { height: 46vh; min-height: 320px; }
+  header .sub { display: none; }
+}
+@media (max-width: 620px) {
+  header { padding: 0 12px; gap: 8px; }
+  .proxy-pill { display: none; }
+  #clearHistory { display: none; }
+  .url-bar { flex-wrap: wrap; }
+  select#method { order: 1; }
+  #sendBtn { order: 2; margin-left: auto; }
+  .url-wrap { order: 3; flex-basis: 100%; }
+  .body-type-label { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
 </style>
 </head>
 <body>
 
 <header>
-  <h1>HTTP 调用工具</h1>
-  <span class="sub">纯网页 · 浏览器内自由调用</span>
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/></svg>
+    </div>
+    <h1>HTTP 调用工具</h1>
+    <span class="sub">纯网页 · 浏览器内自由调用</span>
+  </div>
   <div class="spacer"></div>
+  <div class="proxy-pill" id="proxyPill" role="status" aria-live="polite">
+    <span class="dot"></span><span id="proxyPillText">本地代理检测中</span>
+  </div>
   <button id="historyBtn">历史记录</button>
   <button id="clearHistory">清空</button>
 </header>
 
 <main>
   <!-- 请求面板 -->
-  <section class="request-panel">
+  <section class="request-panel" aria-label="请求配置">
     <div class="url-bar">
-      <select id="method">
-        <option value="GET" class="get">GET</option>
-        <option value="POST" class="post">POST</option>
-        <option value="PUT" class="put">PUT</option>
-        <option value="PATCH" class="patch">PATCH</option>
-        <option value="DELETE" class="delete">DELETE</option>
-        <option value="HEAD" class="get">HEAD</option>
-        <option value="OPTIONS" class="get">OPTIONS</option>
+      <select id="method" aria-label="请求方法">
+        <option value="GET">GET</option>
+        <option value="POST">POST</option>
+        <option value="PUT">PUT</option>
+        <option value="PATCH">PATCH</option>
+        <option value="DELETE">DELETE</option>
+        <option value="HEAD">HEAD</option>
+        <option value="OPTIONS">OPTIONS</option>
       </select>
-      <input id="url" type="text" placeholder="输入 URL，例如 https://api.example.com/data">
+      <div class="url-wrap">
+        <input id="url" type="text" placeholder="输入 URL，例如 https://api.example.com/data" aria-label="请求 URL" autocomplete="off" spellcheck="false">
+      </div>
       <button id="sendBtn">发送</button>
-    </div>
-
-    <div class="toolbar">
-      <button id="addHeader">+ 添加 Header</button>
-      <button id="insertToken">插入 Bearer Token</button>
-      <button id="importCurl">导入 curl</button>
     </div>
 
     <div class="option-row">
@@ -281,51 +483,86 @@ select#method.delete { color: var(--red); }
       </label>
     </div>
 
-    <div class="section-title">请求头 / 查询参数</div>
-    <div class="editor-area" id="kvArea">
-      <div class="kv-editor" id="kvEditor"></div>
+    <div class="tabs-bar">
+      <div class="segmented" role="tablist" aria-label="请求配置分页">
+        <button class="seg-btn active" data-tab="headers" role="tab" aria-selected="true">请求头 <span class="seg-count" id="headersCount">0</span></button>
+        <button class="seg-btn" data-tab="queries" role="tab" aria-selected="false">查询参数 <span class="seg-count" id="queriesCount">0</span></button>
+        <button class="seg-btn" data-tab="body" role="tab" aria-selected="false">请求体</button>
+      </div>
     </div>
 
-    <div class="section-title">请求体</div>
-    <div class="editor-area">
-      <div class="body-area">
-        <div class="body-meta">
-          <label>类型
-            <select id="bodyType">
-              <option value="json">JSON</option>
-              <option value="raw">Text 文本</option>
-              <option value="form">表单 (urlencoded)</option>
-              <option value="none">无</option>
-            </select>
-          </label>
-          <span class="body-type-label" id="bodyTypeLabel">Content-Type: application/json</span>
-          <button id="formatBody" class="mini-btn">格式化 JSON</button>
+    <!-- 请求头 -->
+    <div class="pane active" id="paneHeaders" role="tabpanel">
+      <div class="pane-toolbar">
+        <button id="addHeader">+ 添加 Header</button>
+        <button id="insertToken">插入 Bearer Token</button>
+        <button id="importCurl">导入 curl</button>
+      </div>
+      <div class="editor-area">
+        <div class="kv-editor" id="kvEditor" data-empty="暂无自定义请求头，点击上方「添加 Header」新增"></div>
+      </div>
+    </div>
+
+    <!-- 查询参数 -->
+    <div class="pane" id="paneQueries" role="tabpanel">
+      <div class="pane-toolbar">
+        <button id="addQuery">+ 添加参数</button>
+      </div>
+      <div class="editor-area">
+        <div class="kv-editor" id="queryEditor" data-empty="暂无查询参数，发送时会自动拼接到 URL"></div>
+      </div>
+    </div>
+
+    <!-- 请求体 -->
+    <div class="pane" id="paneBody" role="tabpanel">
+      <div class="editor-area" style="padding-top:0">
+        <div class="body-area">
+          <div class="body-meta">
+            <label>类型
+              <select id="bodyType">
+                <option value="json">JSON</option>
+                <option value="raw">Text 文本</option>
+                <option value="form">表单 (urlencoded)</option>
+                <option value="none">无</option>
+              </select>
+            </label>
+            <span class="body-type-label" id="bodyTypeLabel">Content-Type: application/json</span>
+            <button id="formatBody" class="mini-btn">格式化 JSON</button>
+          </div>
+          <textarea id="bodyInput" placeholder='在此输入请求体，例如 {"key": "value"}'></textarea>
         </div>
-        <textarea id="bodyInput" placeholder='在此输入请求体，例如 {"key": "value"}'></textarea>
       </div>
     </div>
   </section>
 
   <!-- 响应面板 -->
-  <section class="response-panel">
-    <div class="section-title">
-      响应
+  <section class="response-panel" aria-label="响应结果">
+    <div class="panel-head">
       <div class="res-meta">
+        <span class="res-label">响应</span>
         <span id="statusBadge"></span>
         <span id="resTime"></span>
         <span id="resSize"></span>
       </div>
+      <div class="spacer"></div>
+      <div class="segmented" id="viewSwitch">
+        <button class="seg-btn active" id="viewJson">JSON</button>
+        <button class="seg-btn" id="viewRaw">Raw</button>
+        <button class="seg-btn" id="viewImage" style="display:none">图片</button>
+      </div>
     </div>
-    <div class="toolbar">
-      <button id="viewJson">JSON 视图</button>
-      <button id="viewRaw">Raw 视图</button>
-      <button id="formatRes">格式化 JSON</button>
-      <button id="downloadRes">下载响应</button>
+    <div id="resWarn" class="res-warn"></div>
+    <div class="pane-toolbar resp-actions">
+      <button id="formatRes">格式化</button>
       <button id="copyRes">复制</button>
+      <button id="downloadRes">下载</button>
+      <button id="stopStream" style="display:none; color:var(--red); border-color:rgba(242,109,109,.4)">■ 停止</button>
+      <div class="spacer"></div>
     </div>
     <div class="response-body">
       <div id="jsonResponseView" class="placeholder">输入 URL 并点击「发送」开始请求</div>
       <div id="rawResponseView"></div>
+      <div id="imageResponseView"><img id="imagePreview" alt="图片预览"></div>
     </div>
   </section>
 </main>
@@ -378,6 +615,7 @@ curl -X POST https://api.example.com/data \
 
   // ---------- KV 编辑器 ----------
   const kvEditor = $("kvEditor");
+  const queryEditor = $("queryEditor");
 
   function addKvRow(container, key, value, delCb) {
     const row = document.createElement("div");
@@ -392,6 +630,7 @@ curl -X POST https://api.example.com/data \
     del.className = "kv-del";
     del.textContent = "\u00d7";
     del.title = "删除";
+    del.setAttribute("aria-label", "删除这一行");
     del.onclick = () => { row.remove(); delCb && delCb(row); };
     row.appendChild(kInput);
     row.appendChild(vInput);
@@ -400,82 +639,65 @@ curl -X POST https://api.example.com/data \
     return { kInput, vInput, row };
   }
 
-  function renderKv() {
-    kvEditor.innerHTML = "";
-    state.headers.forEach((h) => addKvRow(kvEditor, h[0], h[1], (row) => {
-      state.headers = state.headers.filter((_, i) => i !== [...kvEditor.children].indexOf(row));
-    }));
-    state.queries.forEach((q) => addKvRow(kvEditor, q[0], q[1], (row) => {
-      state.queries = state.queries.filter((_, i) => i !== [...kvEditor.children].indexOf(row));
-    }));
-  }
+  const rowsOf = (el) => [...el.querySelectorAll(".kv-row")];
+  const readRow = (r) => [r.querySelector("input").value.trim(), r.querySelectorAll("input")[1].value.trim()];
 
-  $("addHeader").onclick = () => addKvRow(kvEditor, "", "", (row) => {
-    state.headers = state.headers.filter((_, i) => i !== [...kvEditor.children].indexOf(row));
-  });
-
-  // 区分 header 行和 query 行
-  function splitKvRows() {
-    const rows = [...kvEditor.querySelectorAll(".kv-row")];
-    // 先按初始顺序恢复：合并后无法区分，直接重建 —— 用标签前缀标记
-  }
-
-  // 简化：分别维护两组，重新渲染时重新加载输入
   function collectHeaders() {
     const out = [];
     const set = new Set();
-    const rows = [...kvEditor.querySelectorAll(".kv-row")];
-    // 通过 data 属性标记归属
-    rows.forEach((r, i) => {
-      if (r.dataset.group === "headers") {
-        const k = r.querySelector("input").value.trim();
-        const v = r.querySelectorAll("input")[1].value.trim();
-        if (k && !set.has(k.toLowerCase())) { out.push([k, v]); set.add(k.toLowerCase()); }
-      }
+    rowsOf(kvEditor).forEach((r) => {
+      const [k, v] = readRow(r);
+      if (k && !set.has(k.toLowerCase())) { out.push([k, v]); set.add(k.toLowerCase()); }
     });
     return out;
   }
 
   function collectQueries() {
-    const out = [];
-    const rows = [...kvEditor.querySelectorAll(".kv-row")];
-    rows.forEach((r) => {
-      if (r.dataset.group === "queries") {
-        const k = r.querySelector("input").value.trim();
-        const v = r.querySelectorAll("input")[1].value.trim();
-        if (k) out.push([k, v]);
-      }
-    });
-    return out;
+    return rowsOf(queryEditor).map(readRow).filter(([k]) => k);
   }
 
-  // 重写渲染，带组标记
-  function renderKv2() {
-    kvEditor.innerHTML = "";
-    state.headers.forEach((h) => {
-      const { row } = addKvRow(kvEditor, h[0], h[1]);
-      row.dataset.group = "headers";
-    });
-    state.queries.forEach((q) => {
-      const { row } = addKvRow(kvEditor, q[0], q[1]);
-      row.dataset.group = "queries";
-    });
+  function updateKvMeta() {
+    $("headersCount").textContent = rowsOf(kvEditor).length;
+    $("queriesCount").textContent = rowsOf(queryEditor).length;
   }
 
   function refreshKv() {
-    const headers = collectHeaders();
-    const queries = collectQueries();
-    state.headers = headers;
-    state.queries = queries;
+    state.headers = collectHeaders();
+    state.queries = collectQueries();
+    updateKvMeta();
+  }
+
+  function renderKv2() {
+    kvEditor.innerHTML = "";
+    queryEditor.innerHTML = "";
+    state.headers.forEach((h) => addKvRow(kvEditor, h[0], h[1], refreshKv));
+    state.queries.forEach((q) => addKvRow(queryEditor, q[0], q[1], refreshKv));
+    updateKvMeta();
   }
 
   renderKv2();
 
-  $("addHeader").onclick = () => {
-    const { row } = addKvRow(kvEditor, "", "");
-    row.dataset.group = "headers";
+  function addRowTo(editor) {
+    const { row } = addKvRow(editor, "", "", refreshKv);
     row.querySelector("input").focus();
-  };
+    updateKvMeta();
+  }
+  $("addHeader").onclick = () => addRowTo(kvEditor);
+  $("addQuery").onclick = () => addRowTo(queryEditor);
+
+  // ---------- 请求配置分页 ----------
+  const tabButtons = [...document.querySelectorAll(".seg-btn[data-tab]")];
+  const panes = { headers: $("paneHeaders"), queries: $("paneQueries"), body: $("paneBody") };
+  function switchTab(name) {
+    tabButtons.forEach((b) => {
+      const on = b.dataset.tab === name;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    Object.entries(panes).forEach(([k, el]) => el.classList.toggle("active", k === name));
+  }
+  tabButtons.forEach((b) => { b.onclick = () => switchTab(b.dataset.tab); });
+  switchTab("headers");
 
   // ---------- 方法切换 ----------
   const methodSel = $("method");
@@ -572,6 +794,13 @@ curl -X POST https://api.example.com/data \
       if (i > 0) headers.push([h.slice(0, i).trim(), h.slice(i + 1).trim()]);
     };
     const dataFlags = new Set(["-d", "--data", "--data-raw", "--data-binary", "--data-urlencode"]);
+    // 无值开关: 后面不跟参数, 不能按「未知带值参数」跳过后一位 (否则会把 URL 吞掉)
+    const boolFlags = new Set([
+      "-l", "--location", "--location-trusted",
+      "-s", "--silent", "-k", "--insecure", "-i", "--include",
+      "-v", "--verbose", "-n", "--no-buffer", "-f", "--fail",
+      "--compressed", "--no-keepalive", "-g", "--globoff",
+    ]);
     let i = 0;
     if (tokens[0] && /^curl$/i.test(tokens[0])) i = 1;
     for (; i < tokens.length; i++) {
@@ -580,6 +809,7 @@ curl -X POST https://api.example.com/data \
       if (t[0] === "-") {
         if (low === "-x" || low === "--request") method = tokens[++i];
         else if (low === "-h" || low === "--header") pushHeader(tokens[++i]);
+        else if (boolFlags.has(low)) continue; // 无值开关, 直接跳过
         else if (dataFlags.has(low)) {
           const v = tokens[++i];
           if (v && v[0] !== "@") body = (body === null ? "" : body) + v; // 忽略 -d @file
@@ -599,14 +829,16 @@ curl -X POST https://api.example.com/data \
 
   function applyCurl(text) {
     const parsed = parseCurl(text);
-    if (!parsed.url) { toast("未能从 cURL 中解析出 URL"); return; }
+    // 去掉从 Markdown 等来源带入的包裹反引号, 避免 URL 非法
+    const targetUrl = (parsed.url || "").replace(/`/g, "").trim();
+    if (!targetUrl) { toast("未能从 cURL 中解析出 URL"); return; }
 
     // 拆分 URL 中的 query 参数
-    let base = parsed.url, qp = [];
-    const qIdx = parsed.url.indexOf("?");
+    let base = targetUrl, qp = [];
+    const qIdx = targetUrl.indexOf("?");
     if (qIdx >= 0) {
-      base = parsed.url.slice(0, qIdx);
-      parsed.url.slice(qIdx + 1).split("&").forEach((pair) => {
+      base = targetUrl.slice(0, qIdx);
+      targetUrl.slice(qIdx + 1).split("&").forEach((pair) => {
         if (!pair) return;
         const eq = pair.indexOf("=");
         const k = eq >= 0 ? decodeURIComponent(pair.slice(0, eq)) : decodeURIComponent(pair);
@@ -619,6 +851,7 @@ curl -X POST https://api.example.com/data \
     state.headers = parsed.headers.slice();
     state.queries = qp;
     renderKv2();
+    switchTab("headers");
 
     const m = (parsed.method || (parsed.body ? "POST" : "GET")).toUpperCase();
     methodSel.value = m;
@@ -663,10 +896,10 @@ curl -X POST https://api.example.com/data \
       const row = kvEditor.querySelectorAll(".kv-row")[idx];
       row.querySelectorAll("input")[1].value = "Bearer " + token;
     } else {
-      const { row } = addKvRow(kvEditor, "Authorization", "Bearer " + token);
-      row.dataset.group = "headers";
+      addKvRow(kvEditor, "Authorization", "Bearer " + token, refreshKv);
+      switchTab("headers");
     }
-    state.headers = collectHeaders();
+    refreshKv();
   };
 
   // ---------- JSON 格式化 ----------
@@ -709,11 +942,18 @@ curl -X POST https://api.example.com/data \
 
   // 本地代理是否在线
   let localProxyAlive = false;
+  function updateProxyPill() {
+    const pill = $("proxyPill");
+    if (!pill) return;
+    pill.classList.toggle("online", localProxyAlive);
+    pill.classList.toggle("offline", !localProxyAlive);
+    $("proxyPillText").textContent = localProxyAlive ? "本地代理在线" : "本地代理离线";
+  }
   function checkLocalProxy() {
     fetch("http://localhost:8787/?url=" + encodeURIComponent("http://localhost:8787/ping"))
       .then((r) => r.text())
-      .then((t) => { localProxyAlive = t === "pong"; })
-      .catch(() => { localProxyAlive = false; });
+      .then((t) => { localProxyAlive = t === "pong"; updateProxyPill(); })
+      .catch(() => { localProxyAlive = false; updateProxyPill(); });
   }
   checkLocalProxy();
   setInterval(checkLocalProxy, 5000);
@@ -767,9 +1007,14 @@ curl -X POST https://api.example.com/data \
   const sendBtn = $("sendBtn");
   const responseEl = $("jsonResponseView");
   const rawResponseView = $("rawResponseView");
+  const imageResponseView = $("imageResponseView");
+  const imagePreview = $("imagePreview");
+  const resWarn = $("resWarn");
   const statusBadge = $("statusBadge");
   const resTime = $("resTime");
   const resSize = $("resSize");
+  const responseBody = document.querySelector(".response-body");
+  const stopStreamBtn = $("stopStream");
 
   let currentRes = null; // {status, time, size, text, json, headers, url, method}
 
@@ -803,24 +1048,55 @@ curl -X POST https://api.example.com/data \
       const targets = $("corsProxy").checked ? buildProxyTargets(url) : [url];
       const { resp, used } = await fetchWithFailover(targets, init);
       const t1 = performance.now();
-      const text = await resp.text();
+
+      const ct = resp.headers.get("content-type") || "";
+      const isImage = /^image\//i.test(ct);
+      const isSSE = /text\/event-stream/i.test(ct);
+      const tooLarge = resp.headers.get("X-Response-Too-Large") === "1";
+
+      // SSE 流式响应: 打字机式逐块展示
+      if (isSSE) {
+        await streamSse(resp, t0, describeProxy(used));
+        return;
+      }
+
+      let text = "";
+      let blobUrl = null;
+      let blobSize = 0;
+      if (isImage) {
+        // 图片类型: 以 blob 形式读取, 用于前端图片预览
+        const blob = await resp.blob();
+        blobUrl = URL.createObjectURL(blob);
+        blobSize = blob.size;
+        text = "";
+      } else {
+        text = await resp.text();
+      }
+
+      // 释放上一次的图片对象 URL, 避免内存泄漏
+      if (currentRes && currentRes.blobUrl) URL.revokeObjectURL(currentRes.blobUrl);
 
       currentRes = {
         status: resp.status,
         time: (t1 - t0).toFixed(0),
-        size: new Blob([text]).size,
+        size: isImage ? blobSize : new Blob([text]).size,
         text,
         json: null,
+        isImage,
+        blobUrl,
+        tooLarge,
         headers: Object.fromEntries(resp.headers.entries()),
         url,
         via: $("corsProxy").checked ? describeProxy(used) : "",
         method: state.method,
       };
-      try { currentRes.json = JSON.parse(text); } catch (e) {}
+      if (!isImage) {
+        try { currentRes.json = JSON.parse(text); } catch (e) {}
+      }
 
       renderResponse();
       saveHistory();
-      toast("请求完成 " + resp.status);
+      toast(tooLarge ? "响应过大，已拦截响应体" : "请求完成 " + resp.status);
     } catch (e) {
       const t1 = performance.now();
       currentRes = {
@@ -833,6 +1109,9 @@ curl -X POST https://api.example.com/data \
       resTime.textContent = (t1 - t0).toFixed(0) + " ms";
       responseEl.classList.remove("placeholder");
       rawResponseView.style.display = "none";
+      imageResponseView.style.display = "none";
+      resWarn.style.display = "none";
+      $("viewImage").style.display = "none";
       responseEl.className = "code-block err";
       responseEl.textContent = "请求失败: " + e.message +
         "\n\n提示: 如果是浏览器跨域 (CORS) 限制，请勾选「跨域代理」；" +
@@ -844,49 +1123,219 @@ curl -X POST https://api.example.com/data \
     }
   }
 
+  function formatSize(n) {
+    return n < 1024 ? n + " B" : (n / 1024).toFixed(1) + " KB";
+  }
+
   function renderResponse() {
     const r = currentRes;
     statusBadge.textContent = r.status ? ("HTTP " + r.status) : "错误";
     statusBadge.className = r.status ? ("status-" + (r.status < 300 ? "2xx" : r.status < 400 ? "3xx" : r.status < 500 ? "4xx" : "5xx")) : "status-5xx";
     resTime.textContent = r.time + " ms";
-    resSize.textContent = (r.via ? "via " + r.via + " · " : "") + (r.size ? (r.size < 1024 ? r.size + " B" : (r.size / 1024).toFixed(1) + " KB") : "");
+    resSize.textContent = (r.via ? "via " + r.via + " · " : "") + (r.size ? formatSize(r.size) : "");
 
-    if (r.json) {
-      responseEl.classList.remove("code-block", "err");
+    // 响应过大警告横幅
+    if (r.tooLarge) {
+      resWarn.style.display = "flex";
+      resWarn.textContent = "接口响应过大，已拦截响应体，仅返回提示（不泄露原始响应内容）。";
+    } else {
+      resWarn.style.display = "none";
+    }
+
+    // 图片预览开关
+    $("viewImage").style.display = r.isImage ? "" : "none";
+
+    if (r.isImage) {
+      showImage();
+    } else {
+      imageResponseView.style.display = "none";
+      responseEl.style.display = "";
+      rawResponseView.style.display = "none";
+      if (r.json) {
+        responseEl.className = "code-block";
+        responseEl.textContent = JSON.stringify(r.json, null, 2);
+      } else if (r.text) {
+        responseEl.className = "code-block";
+        responseEl.textContent = r.text;
+      } else {
+        responseEl.textContent = "(空响应)";
+      }
+      setActiveView("viewJson");
+    }
+    $("viewJson").textContent = r.json ? "JSON" : "文本";
+  }
+
+  function setActiveView(which) {
+    ["viewJson", "viewRaw", "viewImage"].forEach((id) => $(id).classList.toggle("active", id === which));
+  }
+
+  // ---------- SSE 流式 / 打字机展示 ----------
+  // 解析 SSE 原始文本, 提取已完成的各个事件中的 data 字段
+  function processSse(raw) {
+    raw = raw.replace(/\r\n?/g, "\n"); // 统一换行符
+    const events = [];
+    let i = 0;
+    while (true) {
+      const idx = raw.indexOf("\n\n", i);
+      if (idx === -1) break; // 末尾的未完成事件留待下次
+      const block = raw.slice(i, idx);
+      const lines = block.split("\n");
+      const dataParts = [];
+      for (const line of lines) {
+        if (line.startsWith("data:")) {
+          let v = line.slice(5);
+          if (v.startsWith(" ")) v = v.slice(1);
+          dataParts.push(v);
+        }
+        // event: / id: / retry: / :注释 等字段忽略
+      }
+      if (dataParts.length) {
+        const text = dataParts.join("\n");
+        if (text !== "[DONE]") events.push(text); // 跳过常见的结束哨兵
+      }
+      i = idx + 2;
+    }
+    return { remaining: raw.slice(i), events };
+  }
+
+  // 以打字机方式展示 SSE 流: 逐块读取并逐字呈现
+  async function streamSse(resp, t0, viaLabel) {
+    responseEl.classList.remove("placeholder");
+    rawResponseView.style.display = "none";
+    imageResponseView.style.display = "none";
+    responseEl.style.display = "";
+    responseEl.className = "code-block";
+    responseEl.textContent = "";
+    stopStreamBtn.style.display = "";
+
+    statusBadge.textContent = "HTTP " + resp.status + " · 流式";
+    statusBadge.className = "status-2xx";
+    resTime.textContent = "0 ms";
+    resSize.textContent = "";
+
+    let displayed = "";   // 已显示文本
+    let typeBuf = "";      // 待打字机揭示的文本
+    let sseRaw = "";       // 尚未解析完的 SSE 原始流
+    let finished = false;
+
+    const reveal = () => {
+      if (typeBuf.length) {
+        const step = Math.min(typeBuf.length, 6); // 每帧揭示字数
+        displayed += typeBuf.slice(0, step);
+        typeBuf = typeBuf.slice(step);
+        responseEl.textContent = displayed;
+        responseEl.scrollTop = responseEl.scrollHeight;
+        responseBody.scrollTop = responseBody.scrollHeight;
+      }
+    };
+    const timer = setInterval(reveal, 20);
+
+    const flush = () => { if (typeBuf.length) { displayed += typeBuf; typeBuf = ""; reveal(); } };
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    stopStreamBtn.onclick = async () => {
+      finished = true;
+      clearInterval(timer);
+      try { await reader.cancel(); } catch (e) {}
+      flush();
+      stopStreamBtn.style.display = "none";
+      finalize();
+    };
+
+    function finalize() {
+      const t1 = performance.now();
+      resTime.textContent = (t1 - t0).toFixed(0) + " ms";
+      resSize.textContent = (viaLabel ? "via " + viaLabel + " · " : "") + formatSize(displayed.length);
+      currentRes = {
+        status: resp.status, time: (t1 - t0).toFixed(0), size: displayed.length,
+        text: displayed, json: null, isImage: false, isSSE: true,
+        headers: Object.fromEntries(resp.headers.entries()),
+        url: state.url, method: state.method,
+      };
+      saveHistory();
+    }
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        sseRaw += decoder.decode(value, { stream: true });
+        const r = processSse(sseRaw);
+        sseRaw = r.remaining;
+        if (r.events.length) typeBuf += r.events.join(""); // 多事件直接拼接(适用于 token 流式)
+      }
+      sseRaw += decoder.decode(); // flush 末尾
+      const r = processSse(sseRaw);
+      if (r.events.length) typeBuf += r.events.join("");
+    } catch (e) {
+      flush();
+      responseEl.textContent += "\n\n[流读取中断] " + e.message;
+    } finally {
+      clearInterval(timer);
+    }
+
+    if (!finished) {
+      flush();
+      stopStreamBtn.style.display = "none";
+      finalize();
+      toast("SSE 流已结束");
+    }
+  }
+
+  // 三种响应视图切换
+  function showJson() {
+    if (!currentRes) return;
+    setActiveView("viewJson");
+    imageResponseView.style.display = "none";
+    rawResponseView.style.display = "none";
+    responseEl.style.display = "";
+    if (currentRes.json) {
       responseEl.className = "code-block";
-      responseEl.textContent = JSON.stringify(r.json, null, 2);
-    } else if (r.text) {
-      responseEl.classList.remove("err");
+      responseEl.textContent = JSON.stringify(currentRes.json, null, 2);
+    } else if (currentRes.text) {
       responseEl.className = "code-block";
-      responseEl.textContent = r.text;
+      responseEl.textContent = currentRes.text;
     } else {
       responseEl.textContent = "(空响应)";
     }
-    $("viewJson").textContent = r.json ? "JSON 视图" : "文本视图";
   }
-
-  sendBtn.onclick = send;
-  $("url").addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
-  methodSel.onchange();
-
-  // ---------- 响应视图切换 ----------
-  $("viewJson").onclick = () => {
+  function showRaw() {
     if (!currentRes) return;
-    rawResponseView.style.display = "none";
-    responseEl.style.display = "";
-    renderResponse();
-  };
-  $("viewRaw").onclick = () => {
-    if (!currentRes) return;
+    setActiveView("viewRaw");
+    imageResponseView.style.display = "none";
     responseEl.style.display = "none";
     rawResponseView.style.display = "";
     rawResponseView.className = "code-block";
     rawResponseView.textContent = currentRes.text;
-  };
+  }
+  function showImage() {
+    if (!currentRes || !currentRes.isImage) return;
+    setActiveView("viewImage");
+    responseEl.style.display = "none";
+    rawResponseView.style.display = "none";
+    imageResponseView.style.display = "flex";
+    imagePreview.src = currentRes.blobUrl;
+  }
+
+  sendBtn.onclick = send;
+  $("url").addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
+  // Ctrl / Cmd + Enter 快速发送
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); send(); }
+  });
+  methodSel.onchange();
+
+  // ---------- 响应视图切换 ----------
+  $("viewJson").onclick = showJson;
+  $("viewRaw").onclick = showRaw;
+  $("viewImage").onclick = showImage;
 
   // 格式化响应 JSON（对最小化/紧凑的 JSON 重新缩进）
   $("formatRes").onclick = () => {
     if (!currentRes) { toast("尚无响应"); return; }
+    if (currentRes.isImage) { toast("图片响应无需格式化"); return; }
     try {
       const obj = JSON.parse(currentRes.text);
       currentRes.json = obj;
@@ -895,7 +1344,8 @@ curl -X POST https://api.example.com/data \
       responseEl.style.display = "";
       responseEl.className = "code-block";
       responseEl.textContent = JSON.stringify(obj, null, 2);
-      $("viewJson").textContent = "JSON 视图";
+      $("viewJson").textContent = "JSON";
+      setActiveView("viewJson");
       toast("已格式化响应 JSON");
     } catch (e) {
       toast("响应不是合法 JSON: " + e.message);
@@ -905,6 +1355,7 @@ curl -X POST https://api.example.com/data \
   // ---------- 复制 / 下载 ----------
   $("copyRes").onclick = () => {
     if (!currentRes) return;
+    if (currentRes.isImage) { toast("图片不支持复制为文本"); return; }
     navigator.clipboard.writeText(currentRes.text).then(
       () => toast("已复制到剪贴板"),
       () => toast("复制失败")
@@ -913,11 +1364,20 @@ curl -X POST https://api.example.com/data \
   $("downloadRes").onclick = () => {
     if (!currentRes) return;
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([currentRes.text]));
-    a.download = "response.txt";
-    a.click();
-    URL.revokeObjectURL(a.href);
-    toast("已下载");
+    if (currentRes.isImage && currentRes.blobUrl) {
+      // 图片: 直接下载 blob, 按 Content-Type 推断扩展名
+      const ext = (currentRes.headers["content-type"] || "image/png").split("/")[1].split(";")[0] || "png";
+      a.href = currentRes.blobUrl;
+      a.download = "response." + ext;
+      a.click();
+      toast("已下载图片");
+    } else {
+      a.href = URL.createObjectURL(new Blob([currentRes.text]));
+      a.download = "response.txt";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast("已下载");
+    }
   };
 
   // ---------- 历史记录 ----------
@@ -942,7 +1402,7 @@ curl -X POST https://api.example.com/data \
     const list = $("histList");
     list.innerHTML = "";
     if (!state.history.length) {
-      list.innerHTML = '<div class="placeholder" style="padding:30px">暂无历史记录</div>';
+      list.innerHTML = '<div class="hist-empty">暂无历史记录，发送请求后会自动记录</div>';
       return;
     }
     state.history.forEach((h) => {
@@ -951,7 +1411,7 @@ curl -X POST https://api.example.com/data \
       el.innerHTML =
         '<span class="hist-method" style="color:' + methodColor(h.method) + '">' + h.method + "</span>" +
         '<span class="hist-url">' + escapeHtml(h.url) + "</span>" +
-        '<span>' + (h.status ? h.status : "-") + "</span>" +
+        '<span class="hist-status" style="color:' + statusColor(h.status) + '">' + (h.status ? h.status : "-") + "</span>" +
         '<span class="hist-time">' + h.date + " " + h.time + "</span>";
       el.onclick = () => {
         methodSel.value = h.method;
@@ -962,9 +1422,13 @@ curl -X POST https://api.example.com/data \
       list.appendChild(el);
     });
   }
+  function statusColor(s) {
+    if (!s) return "#727d8f";
+    return s < 300 ? "#34d399" : s < 400 ? "#82a9ff" : s < 500 ? "#f26d6d" : "#f0a93b";
+  }
   function methodColor(m) {
-    const c = { GET: "#3ecf8e", POST: "#ffb020", PUT: "#4f8cff", PATCH: "#b083ff", DELETE: "#ff5c5c", HEAD: "#3ecf8e", OPTIONS: "#8b90a3" };
-    return c[m] || "#8b90a3";
+    const c = { GET: "#34d399", POST: "#f0a93b", PUT: "#5d8dff", PATCH: "#ab8bff", DELETE: "#f26d6d", HEAD: "#34d399", OPTIONS: "#a6b0c0" };
+    return c[m] || "#a6b0c0";
   }
   function escapeHtml(s) {
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -987,13 +1451,16 @@ curl -X POST https://api.example.com/data \
     if (!t) {
       t = document.createElement("div");
       t.className = "toast";
-      t.style.cssText = "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#232734;color:#e6e8ee;padding:8px 18px;border-radius:8px;font-size:13px;z-index:999;border:1px solid #2d3242;box-shadow:0 4px 16px rgba(0,0,0,.4);transition:opacity .3s";
+      t.setAttribute("role", "status");
+      t.setAttribute("aria-live", "polite");
       document.body.appendChild(t);
     }
     t.textContent = msg;
-    t.style.opacity = "1";
     clearTimeout(t._timer);
-    t._timer = setTimeout(() => { t.style.opacity = "0"; }, 2000);
+    // 强制重排, 保证连续提示也能重新播放动画
+    void t.offsetWidth;
+    t.classList.add("show");
+    t._timer = setTimeout(() => t.classList.remove("show"), 2000);
   }
 })();
 </script>

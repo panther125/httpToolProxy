@@ -23,6 +23,10 @@ const ROOT = __dirname;
 const INDEX_FILE = path.join(ROOT, "index.html");
 const MAX_REDIRECTS = 5;
 
+// 响应体安全上限: 超过此大小的响应不返回响应体, 仅提示「接口响应过大」
+// 可通过环境变量 MAX_BODY (单位 KB) 覆盖, 例如 MAX_BODY=1024 node server.js
+const MAX_BODY_BYTES = (process.env.MAX_BODY ? parseInt(process.env.MAX_BODY, 10) : 1024) * 1024;
+
 // 这些响应头由本代理自己管理, 不应透传给目标服务器
 const HOP_BY_HOP = new Set([
   "connection",
@@ -70,6 +74,26 @@ function forwardHeaders(incomingHeaders) {
     out[k] = v;
   }
   return out;
+}
+
+// 响应体过大时: 中止原始响应体, 返回「接口响应过大」提示 (不泄露任何响应体内容)
+function writeTooLarge(res, receivedBytes) {
+  withCors(res);
+  res.writeHead(200, {
+    "Content-Type": "application/json; charset=utf-8",
+    "X-Response-Too-Large": "1",
+    "Cache-Control": "no-store",
+  });
+  const payload = {
+    error: "接口响应过大",
+    message:
+      "响应体已超过 " +
+      (MAX_BODY_BYTES / 1024).toFixed(0) +
+      "KB 上限，为安全起见本次不返回响应体。",
+    limitBytes: MAX_BODY_BYTES,
+    receivedBytes: receivedBytes,
+  };
+  res.end(JSON.stringify(payload, null, 2));
 }
 
 // 真正执行一次到目标服务器的请求, 并把响应内容回写
@@ -126,10 +150,72 @@ function proxyOnce(targetUrl, method, headers, body, redirectDepth, res) {
       if (k.toLowerCase().startsWith("access-control-")) continue;
       outHeaders[k] = v;
     }
-    withCors(res);
-    res.writeHead(status, outHeaders);
-    upstream.pipe(res);
-    upstream.on("error", () => res.destroy());
+
+    // SSE / 流式响应: 不缓冲, 直接管道回写客户端, 以支持打字机式逐块展示
+    const upstreamCt = (upstream.headers["content-type"] || "").toLowerCase();
+    if (/text\/event-stream/.test(upstreamCt)) {
+      // 流长度未知, 移除上游声明的 content-length, 交由 Node 以分块方式传输
+      delete outHeaders["content-length"];
+      withCors(res);
+      res.writeHead(status, outHeaders);
+      upstream.pipe(res);
+      upstream.on("error", () => res.destroy());
+      // 客户端提前断开: 中止上游下载, 避免继续拉取长连接流
+      res.on("close", () => { if (!res.writableEnded) upstream.destroy(); });
+      return;
+    }
+
+    // HEAD 无响应体, 直接透传, 不实施体积限制 (避免被声明的 content-length 误判为过大)
+    if (method === "HEAD") {
+      withCors(res);
+      res.writeHead(status, outHeaders);
+      upstream.pipe(res);
+      upstream.on("error", () => res.destroy());
+      return;
+    }
+
+    // 若上游已声明 Content-Length 且明显超过上限, 直接短路, 避免无谓下载大响应
+    const declared = parseInt(upstream.headers["content-length"], 10);
+    if (!Number.isNaN(declared) && declared > MAX_BODY_BYTES) {
+      upstream.resume(); // 丢弃响应体
+      upstream.destroy();
+      return writeTooLarge(res, declared);
+    }
+
+    // 缓冲响应体以实施 500KB 安全上限:
+    //   - 体积 <= 上限: 原样回写 (图片等二进制亦可正常返回, 由前端预览)
+    //   - 体积 > 上限: 中止下载, 改为返回「接口响应过大」提示, 不泄露响应体
+    const chunks = [];
+    let total = 0;
+    let aborted = false;
+
+    upstream.on("data", (chunk) => {
+      if (aborted) return;
+      chunks.push(chunk);
+      total += chunk.length;
+      if (total > MAX_BODY_BYTES) {
+        aborted = true;
+        upstream.destroy();
+        writeTooLarge(res, total);
+      }
+    });
+    upstream.on("error", () => {
+      if (!aborted && !res.writableEnded) res.destroy();
+    });
+    upstream.on("end", () => {
+      if (aborted) return;
+      withCors(res);
+      res.writeHead(status, outHeaders);
+      res.end(Buffer.concat(chunks));
+    });
+
+    // 客户端提前断开: 中止上游下载, 避免继续拉取大响应
+    res.on("close", () => {
+      if (!aborted && !res.writableEnded) {
+        aborted = true;
+        upstream.destroy();
+      }
+    });
   });
 
   req.on("timeout", () => req.destroy(new Error("上游请求超时")));
